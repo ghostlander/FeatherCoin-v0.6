@@ -1415,8 +1415,13 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
             return error("ConnectBlock() : UpdateTxIndex failed");
     }
 
-    if (vtx[0].GetValueOut() != GetBlockValue(pindex->nHeight, nFees))
+    if (vtx[0].GetValueOut() > GetBlockValue(pindex->nHeight, nFees))
         return false;
+
+     // No more blocks with bogus reward accepted
+     if ((pindex->nHeight > 87948) &&
+       (vtx[0].GetValueOut() != GetBlockValue(pindex->nHeight, nFees)))
+         return false;
 
     // Update block index on disk without changing it in memory.
     // The memory index structure will be changed after the db commits.
