@@ -1852,6 +1852,14 @@ bool CBlock::AcceptBlock()
     // Check timestamp against prev
     if (GetBlockTime() <= pindexPrev->GetMedianTimePast())
         return error("AcceptBlock() : block's timestamp is too early");
+    
+    // limit block in future accepted in chain to only a time window of 30 min
+    if (GetBlockTime() > GetAdjustedTime() + 30 * 60)
+        return error("CheckBlock() : block timestamp too far in the future");
+
+    // Check timestamp against prev it should not be more then 2 times the window
+    if (GetBlockTime() <= pindexPrev->GetBlockTime() - 2 * 30 * 60)
+        return error("AcceptBlock() : block's timestamp is too early compared to the last block");
 
     // Check that all transactions are finalized
     BOOST_FOREACH(const CTransaction& tx, vtx)
