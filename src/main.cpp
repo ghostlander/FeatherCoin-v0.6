@@ -960,7 +960,7 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
     }
 
     // The 2nd hard fork (1.0905077 aka 9% difficulty limiter)
-    if(nHeight >= nForkTwo) {
+    if(nHeight >= nForkTwo || fTestNet && (nHeight >= 2016)))) {
         nActualTimespanMax = nTargetTimespan*494/453;
         nActualTimespanMin = nTargetTimespan*453/494;
     }
