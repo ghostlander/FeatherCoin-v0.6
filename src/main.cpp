@@ -1786,13 +1786,17 @@ bool CBlock::CheckBlock() const
     if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
         return DoS(100, error("CheckBlock() : size limits failed"));
 
-    // Check proof of work matches claimed amount
+    // Check for proof of work
     if (!CheckProofOfWork(GetPoWHash(), nBits))
         return DoS(50, error("CheckBlock() : proof of work failed"));
 
-    // Check timestamp
-    if (GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
-        return error("CheckBlock() : block timestamp too far in the future");
+    // Check for time stamp (future limit)
+    if (GetBlockTime() > GetAdjustedTime() + 30 * 60)
+        return error("AcceptBlock() : block's time stamp is too far in the future");
+
+    // Check for time stamp (past limit)
+    if ((nHeight > 87948) && (GetBlockTime() <= pindexPrev->GetBlockTime() - 2 * 30 * 60))
+         return error("AcceptBlock() : block's time stamp is too far in the past");
 
     // First transaction must be coinbase, the rest must not be
     if (vtx.empty() || !vtx[0].IsCoinBase())
