@@ -960,7 +960,7 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
     }
 
     // The 2nd hard fork (1.0905077 aka 9% difficulty limiter)
-    if(nHeight >= nForkTwo || fTestNet && (nHeight >= 2016)))) {
+    if(nHeight >= nForkTwo || (fTestNet && (nHeight >= 2016))) {
         nActualTimespanMax = nTargetTimespan*494/453;
         nActualTimespanMin = nTargetTimespan*453/494;
     }
@@ -1462,9 +1462,9 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex)
         return false;
 
      // No more blocks with bogus reward accepted
-     if ((pindex->nHeight > 87948) &&
-       (vtx[0].GetValueOut() != GetBlockValue(pindex->nHeight, nFees)))
-         return false;
+//     if ((pindex->nHeight > 87948) &&
+//       (vtx[0].GetValueOut() != GetBlockValue(pindex->nHeight, nFees)))
+//         return false;
 
     // Update block index on disk without changing it in memory.
     // The memory index structure will be changed after the db commits.
@@ -1790,14 +1790,6 @@ bool CBlock::CheckBlock() const
     if (!CheckProofOfWork(GetPoWHash(), nBits))
         return DoS(50, error("CheckBlock() : proof of work failed"));
 
-    // Check for time stamp (future limit)
-    if (GetBlockTime() > GetAdjustedTime() + 30 * 60)
-        return error("AcceptBlock() : block's time stamp is too far in the future");
-
-    // Check for time stamp (past limit)
-    if ((nHeight > 87948) && (GetBlockTime() <= pindexPrev->GetBlockTime() - 2 * 30 * 60))
-         return error("AcceptBlock() : block's time stamp is too far in the past");
-
     // First transaction must be coinbase, the rest must not be
     if (vtx.empty() || !vtx[0].IsCoinBase())
         return DoS(100, error("CheckBlock() : first tx is not coinbase"));
@@ -1853,17 +1845,17 @@ bool CBlock::AcceptBlock()
     if (nBits != GetNextWorkRequired(pindexPrev, this))
         return DoS(100, error("AcceptBlock() : incorrect proof of work"));
 
-    // Check timestamp against prev
-    if (GetBlockTime() <= pindexPrev->GetMedianTimePast())
-        return error("AcceptBlock() : block's timestamp is too early");
-    
-    // limit block in future accepted in chain to only a time window of 30 min
+    // Check for time stamp (future limit)
     if (GetBlockTime() > GetAdjustedTime() + 30 * 60)
-        return error("CheckBlock() : block timestamp too far in the future");
+        return error("AcceptBlock() : block's time stamp is too far in the future");
 
-    // Check timestamp against prev it should not be more then 2 times the window
-    if (GetBlockTime() <= pindexPrev->GetBlockTime() - 2 * 30 * 60)
-        return error("AcceptBlock() : block's timestamp is too early compared to the last block");
+    // Check for time stamp (past limit #1)
+    if (GetBlockTime() <= pindexPrev->GetMedianTimePast())
+        return error("AcceptBlock() : block's time stamp is too early");
+
+    // Check for time stamp (past limit #2)
+    if ((nHeight > 87948) && (GetBlockTime() <= pindexPrev->GetBlockTime() - 2 * 30 * 60))
+         return error("AcceptBlock() : block's time stamp is too far in the past");
 
     // Check that all transactions are finalized
     BOOST_FOREACH(const CTransaction& tx, vtx)
