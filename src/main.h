@@ -1405,6 +1405,10 @@ public:
  * not read the entire buffer if the alert is for a newer version, but older
  * versions can still relay the original data.
  */
+
+static const char* pszMainKey = "0404b92f2aa066eab1754be5bf2d2040c03a4d3571075933542b0fa5988a2be6f891c7d315ec92c9639eaf23bdb6665ef754387d3a0b04e9a18e1ad3fd8a40f802";
+static const char* pszTestKey = "0440efdc1002ffd7235eb661acf9f1d407a7ea78271105d7940fb25f7d9d0938d71e6b0dbf562d76d081b406b4dbaa5e85550b996833ef2efafe4585ab2aa31811";
+
 class CUnsignedAlert
 {
 public:
@@ -1582,13 +1586,14 @@ public:
         return false;
     }
 
-    bool CheckSignature()
+    bool CheckSignature() const
     {
+
         CKey key;
-        if (!key.SetPubKey(ParseHex("040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9")))
-            return error("CAlert::CheckSignature() : SetPubKey failed");
+        if (!key.SetPubKey(ParseHex(fTestNet ? pszTestKey : pszMainKey)))
+          return error("CAlert::CheckSignature(): failed to set public key");
         if (!key.Verify(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
-            return error("CAlert::CheckSignature() : verify signature failed");
+          return error("CAlert::CheckSignature(): failed to verify signature");
 
         // Now unserialize the data
         CDataStream sMsg(vchMsg, SER_NETWORK, PROTOCOL_VERSION);

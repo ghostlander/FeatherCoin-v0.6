@@ -473,9 +473,6 @@ bool AppInit2()
     printf("Used data directory %s\n", GetDataDir().string().c_str());
     std::ostringstream strErrors;
 
-    if (fDaemon)
-        fprintf(stdout, "Feathercoin server starting\n");
-
     int64 nStart;
 
     // ********************************************************* Step 5: network initialization
